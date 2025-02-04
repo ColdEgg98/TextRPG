@@ -23,13 +23,86 @@ using static System.Net.Mime.MediaTypeNames;
 using System.Threading;
 using System.Xml.Linq;
 
+public interface ICharacter
+{
+    string Name { get; set; }
+    int Health { get; set; }
+    int Attack { get; set; }
+    bool IsDead { get; set; }
+    void TakeDamage(int damage);
+}
+
+
+class Warrior : ICharacter
+{
+    public string Name { get;}
+    public int Health { get; set; }
+    public int Attack { get; set; }
+    public bool IsDead { get; set; }
+    public void TakeDamage(int damage)
+    {
+        Health -= damage;
+        if (Health <= 0)
+        {
+            IsDead = true;
+        }
+    }
+    public Warrior(string name)
+    {
+        Name = name;
+        Health = 100;
+        Attack = 20;
+    }
+}
+
+class Monster : ICharacter
+{
+    public string Name { get; set; }
+    public int Health { get; set; }
+    public int Attack { get; set; }
+    public bool IsDead { get; set; }
+    public void TakeDamage(int damage)
+    {
+        Health -= damage;
+        if (Health <= 0)
+        {
+            IsDead = true;
+        }
+    }
+}
+
+class Goblin : Monster
+{
+    public Goblin()
+    {
+        Name = "Goblin";
+        Health = 100;
+        Attack = 10;
+        IsDead = false;
+    }
+}
+
+class Dragon : Monster
+{
+    public Dragon()
+    {
+        Name = "Dragon";
+        Health = 200;
+        Attack = 20;
+        IsDead = false;
+    }
+}
+
 namespace TextRPG
 {
     internal class Program
     {
+        int input;
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello, World!");
+            Console.WriteLine("스파르타 던전에 오신 여러분 환영합니다.\n이 곳에서 던전으로 들어가기 전 활동을 할 수 있습니다.\n");
+            Console.WriteLine("1. 상태 보기\n2. 인벤토리\n3. 상점\n\n원하시는 행동을 입력해주세요. ");
+            Console.ReadLine();
         }
     }
 }
