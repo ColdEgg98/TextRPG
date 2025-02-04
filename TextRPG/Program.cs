@@ -37,9 +37,11 @@ public interface IItem
 {
     string Name { get; set; }
     string Description { get; set; }
+    string Type { get; set; }
     int Price { get; set; }
-
+    int Value { get; set; }
     bool isEquip { get; set; }
+    bool isOwned { get; set; }
 
     void Use(Warrior warrior);
     void UnUse(Warrior warrior);
@@ -49,22 +51,28 @@ public class IronArmor : IItem
 {
     public string Name { get; set; }
     public string Description { get; set; }
+    public string Type { get; set; }
     public int Price { get; set; }
+    public int Value { get; set; }
     public bool isEquip { get; set; }
+    public bool isOwned { get; set; }
     public IronArmor()
     {
         Name = "무쇠 갑옷";
+        Type = "방어력";
         Description = "무쇠로 만들어져 튼튼한 갑옷입니다.";
         isEquip = false;
+        isOwned = false;
         Price = 800;
+        Value = 5;
     }
     public void Use(Warrior warrior)
     {
-        warrior.Defense += 5;
+        warrior.Defense += Value;
     }
     public void UnUse(Warrior warrior)
     {
-        warrior.Defense -= 5;
+        warrior.Defense -= Value;
     }
 }
 
@@ -72,22 +80,28 @@ public class OldSword : IItem
 {
     public string Name { get; set; }
     public string Description { get; set; }
+    public string Type { get; set; }
     public int Price { get; set; }
+    public int Value { get; set; }
     public bool isEquip { get; set; }
+    public bool isOwned { get; set; }
     public OldSword()
     {
         Name = "낡은 검";
+        Type = "공격력";
         Description = "쉽게 볼 수 있는 낡은 검입니다.";
         isEquip = false;
+        isOwned = false;
+        Value = 2;
         Price = 500;
     }
     public void Use(Warrior warrior)
     {
-        warrior.Attack += 2;
+        warrior.Attack += Value;
     }
     public void UnUse(Warrior warrior)
     {
-        warrior.Attack -= 2;
+        warrior.Attack -= Value;
     }
 }
 
@@ -95,22 +109,57 @@ public class Spear : IItem
 {
     public string Name { get; set; }
     public string Description { get; set; }
+    public string Type { get; set; }
     public int Price { get; set; }
+    public int Value { get; set; }
     public bool isEquip { get; set; }
+    public bool isOwned { get; set; }
     public Spear()
     {
         Name = "스파르탄의 창";
+        Type = "공격력";
         Description = "과거의 스파르탄이 사용한 창입니다.";
         isEquip = false;
+        isOwned = false;
+        Value = 7;
         Price = 3000;
     }
     public void Use(Warrior warrior)
     {
-        warrior.Attack += 7;
+        warrior.Attack += Value;
     }
     public void UnUse(Warrior warrior)
     {
-        warrior.Attack -= 7;
+        warrior.Attack -= Value;
+    }
+}
+
+public class NightBringer : IItem
+{
+    public string Name { get; set; }
+    public string Description { get; set; }
+    public string Type { get; set; }
+    public int Price { get; set; }
+    public int Value { get; set; }
+    public bool isEquip { get; set; }
+    public bool isOwned { get; set; }
+    public NightBringer()
+    {
+        Name = "태양과 달의 검";
+        Type = "공격력";
+        Description = "태양과 달의 힘을 가진 검입니다.";
+        isEquip = false;
+        isOwned = false;
+        Value = 30;
+        Price = 3000;
+    }
+    public void Use(Warrior warrior)
+    {
+        warrior.Attack += Value;
+    }
+    public void UnUse(Warrior warrior)
+    {
+        warrior.Attack -= Value;
     }
 }
 
@@ -194,7 +243,7 @@ public class Warrior : ICharacter
             }
             else
             {
-                for (int i = 0; i < Inventory.Count; i++)
+                for (int i = 0; i < Inventory.Count; i++) // 인벤토리에 있는 아이템 목록 출력
                 {
                     if(Inventory[i].isEquip == false)
                         Console.WriteLine($"{i + 1}. {Inventory[i].Name}");
@@ -210,11 +259,13 @@ public class Warrior : ICharacter
             if (input == 0)
                 break;
 
+            // 아이템 장착
             if (input <= Inventory.Count && Inventory[input-1].isEquip == false)
             {
                 Inventory[input - 1].Use(this);
                 Inventory[input - 1].isEquip = true;
             }
+            // 아이템 해제
             else if (input <= Inventory.Count && Inventory[input - 1].isEquip == true)
             {
                 Inventory[input - 1].UnUse(this);
@@ -227,7 +278,7 @@ public class Warrior : ICharacter
         }
     }
 
-    public void ShowShop() // 3번을 입력해서 상점으로 들어왔을 때
+    public void ShowShop(List<IItem> items) // 3번을 입력해서 상점으로 들어왔을 때
     {
         while (true)
         {
@@ -237,22 +288,41 @@ public class Warrior : ICharacter
             Console.ResetColor();
             Console.WriteLine("필요한 아이템을 구입할 수 있습니다.\n");
 
-            // ShopItemList 작성해서 아이템 리스트를 보여주기
+            // 아이템 목록 출력
+            for (int i = 0; i < items.Count; i++)
+            {
+                if (items[i].isOwned == false)
+                    Console.WriteLine($"{i + 1}. {items[i].Name} | {items[i].Type} + {items[i].Value} | {items[i].Description} | {items[i].Price} G");
+                else if (items[i].isOwned == true)
+                    Console.WriteLine($"{i + 1}. {items[i].Name} | {items[i].Type} + {items[i].Value} | {items[i].Description} | 구매 완료");
+            }
 
             Console.Write("\n원하시는 행동을 입력해주세요." +
                 "\n\n1. 아이템 구입" +
                 "\n\n0. 나가기\n\n>> ");
 
+            int input = int.Parse(Console.ReadLine());
 
+            if (input == 0)
+                break;
 
-            if ("1" == Console.ReadLine())
+            if (input <= items.Count)
             {
-                // 아이템 구입 로직 작성
-                break;
-
+                // 아이템 구입 로직
+                if (Gold >= items[input - 1].Price)
+                {
+                    Gold -= items[input - 1].Price;
+                    AddItem(items[input - 1]);
+                    items[input - 1].isOwned = true;
+                    Console.WriteLine($"{items[input - 1].Name}을 구입하였습니다.");
+                    Thread.Sleep(1000);
+                }
+                else
+                {
+                    Console.WriteLine("골드가 부족합니다.");
+                    Thread.Sleep(1000);
+                }
             }
-            else if ("0" == Console.ReadLine())
-                break;
         }
     }
 }
@@ -308,7 +378,7 @@ internal class Program
         shopitems.Add(new OldSword());
         shopitems.Add(new Spear());
 
-        player.AddItem(new IronArmor());
+        int input;
 
         while (true)
         {
@@ -316,8 +386,9 @@ internal class Program
             Console.WriteLine($"스파르타 던전에 오신 '{name}'님 환영합니다.\n이 곳에서 던전으로 들어가기 전 활동을 할 수 있습니다.\n");
             Console.WriteLine("1. 상태 보기\n2. 인벤토리\n3. 상점\n\n원하시는 행동을 입력해주세요. ");
 
-            int input;
+
             input = int.Parse(Console.ReadLine());
+
             switch (input)
             {
                 case 1:
@@ -327,11 +398,11 @@ internal class Program
                     player.ShowInventory();
                     continue;
                 case 3:
-                    Console.WriteLine("상점");
+                    player.ShowShop(shopitems);
                     continue;
                 default:
                     Console.WriteLine("잘못된 입력입니다. 다시 입력해주세요.");
-                    Console.ReadKey(true);
+                    Thread.Sleep(1000);
                     break;
             }
         }
