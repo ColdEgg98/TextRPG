@@ -32,13 +32,41 @@ public interface ICharacter
     void TakeDamage(int damage);
 }
 
-
-class Warrior : ICharacter
+public interface IItem
 {
-    public string Name { get;}
-    public int Health { get; set; }
+    string Name { get; set; }
+    void Use(Warrior warrior);
+}
+
+public class HealthPotion : IItem
+{
+    public string Name { get; set; }
+    public void Use(Warrior warrior)
+    {
+        warrior.Health += 50;
+    }
+}
+
+public class StrengthPotion : IItem
+{
+    public string Name { get; set; }
+    public void Use(Warrior warrior)
+    {
+        warrior.Attack += 10;
+    }
+}
+
+
+public class Warrior : ICharacter
+{
+    public int level { get; set; }
+    public string Name { get; set; }
     public int Attack { get; set; }
+    public int Defense { get; set; }
+    public int Health { get; set; }
     public bool IsDead { get; set; }
+    public string Class { get; set; }
+    public int Gold { get; set; }
     public void TakeDamage(int damage)
     {
         Health -= damage;
@@ -50,8 +78,52 @@ class Warrior : ICharacter
     public Warrior(string name)
     {
         Name = name;
-        Health = 100;
+        level = 1;
         Attack = 20;
+        Defense = 10;
+        Health = 100;
+        Class = "전사";
+        Gold = 1500;
+    }
+
+    public void ShowInfo()
+    {
+        while(true)
+        {
+            Console.Clear();
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.WriteLine("상태 보기");
+            Console.ResetColor();
+            Console.WriteLine("캐릭터의 정보가 표시됩니다.\n");
+
+            Console.WriteLine(
+                $"Lv. 0{level}\n" +
+                $"Chad: {Class}\n" +
+                $"공격력: {Attack}\n" +
+                $"방어력 : {Defense}\n" +
+                $"Gold : {Gold} G\n");
+
+            Console.Write("\n원하시는 행동을 입력해주세요.\n\n0. 나가기\n\n>> ");
+            if ("0" == Console.ReadLine())
+                break;
+        }
+    }
+
+    public void ShowInventory()
+    {
+        while (true)
+        {
+            Console.Clear();
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.WriteLine("인벤토리");
+            Console.ResetColor();
+            Console.WriteLine("인벤토리의 정보가 표시됩니다.\n");
+
+
+            Console.Write("\n원하시는 행동을 입력해주세요.\n\n0. 나가기\n\n>> ");
+            if ("0" == Console.ReadLine())
+                break;
+        }
     }
 }
 
@@ -93,17 +165,38 @@ class Dragon : Monster
     }
 }
 
-namespace TextRPG
+internal class Program
 {
-    internal class Program
+    static void Main(string[] args)
     {
-        int input;
-        static void Main(string[] args)
+        Console.WriteLine("텍스트 RPG 게임에 오신 것을 환영합니다.\n이름을 입력해주세요.\n\n");
+        string name = Console.ReadLine();
+        Warrior player = new Warrior(name);
+
+        while (true)
         {
-            Console.WriteLine("스파르타 던전에 오신 여러분 환영합니다.\n이 곳에서 던전으로 들어가기 전 활동을 할 수 있습니다.\n");
+            Console.Clear();
+            Console.WriteLine($"스파르타 던전에 오신 '{name}'님 환영합니다.\n이 곳에서 던전으로 들어가기 전 활동을 할 수 있습니다.\n");
             Console.WriteLine("1. 상태 보기\n2. 인벤토리\n3. 상점\n\n원하시는 행동을 입력해주세요. ");
-            Console.ReadLine();
+
+            int input;
+            input = int.Parse(Console.ReadLine());
+            switch (input)
+            {
+                case 1:
+                    player.ShowInfo();
+                    continue;
+                case 2:
+                    Console.WriteLine("인벤토리");
+                    continue;
+                case 3:
+                    Console.WriteLine("상점");
+                    continue;
+                default:
+                    Console.WriteLine("잘못된 입력입니다. 다시 입력해주세요.");
+                    Console.ReadKey(true);
+                    break;
+            }
         }
     }
 }
-
