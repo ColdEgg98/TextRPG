@@ -139,10 +139,14 @@ public class Warrior : ICharacter
 
     public void TakeDamage(int damage)
     {
+        WriteManager WM = new WriteManager();
+
         CurrentHealth -= damage;
         if (CurrentHealth <= 0)
         {
+            WM.ColoredLine("체력이 0이 되어 사망하였습니다...", ConsoleColor.DarkGray);
             IsDead = true;
+            Thread.Sleep(1000);
         }
     }
 
@@ -163,6 +167,8 @@ public class Warrior : ICharacter
 
     public void ShowInfo() // 1번을 입력해서 상태 보기로 들어왔을 때
     {
+        WriteManager WM = new WriteManager();
+
         while (true)
         {
             Console.Clear();
@@ -171,17 +177,20 @@ public class Warrior : ICharacter
             Console.ResetColor();
             Console.WriteLine("캐릭터의 정보가 표시됩니다.\n");
 
-            Console.WriteLine(
+            Console.Write(
                 $"Lv. 0{level}\n" +
-                $"Chad: {Class}\n" +
-                $"체력 : {CurrentHealth}/{MaxHealth}\n" +
-                $"공격력: {Attack}\n" +
-                $"방어력 : {Defense}\n" +
-                $"Gold : {Gold} G\n");
+                $"Chad: {Class}\n체력 : ");
+            WM.ColoredLine($"{CurrentHealth}/{MaxHealth}", ConsoleColor.DarkRed);
+            Console.Write($"공격력: ");
+            WM.ColoredLine($"{Attack}", ConsoleColor.DarkMagenta);
+            Console.Write("방어력 : ");
+            WM.ColoredLine($"{Defense}", ConsoleColor.Cyan);
+            Console.Write("Gold : ");
+            WM.ColoredLine($"{Gold}\n", ConsoleColor.DarkYellow);
 
             Console.Write("\n원하시는 행동을 입력해주세요.\n\n0. 나가기\n\n>> ");
             if ("0" == Console.ReadLine())
-                break;
+                return;
         }
     }
 
@@ -208,7 +217,7 @@ public class Warrior : ICharacter
             {
                 for (int i = 0; i < Inventory.Count; i++) // 인벤토리에 있는 아이템 목록 출력
                 {
-                    if(Inventory[i].isEquip == false)
+                    if (Inventory[i].isEquip == false)
                         Console.WriteLine($"{i + 1}. {Inventory[i].Name}");
                     else if (Inventory[i].isEquip == true)
                         Console.WriteLine($"[E]{i + 1}. {Inventory[i].Name}");
@@ -224,7 +233,7 @@ public class Warrior : ICharacter
                 break;
 
             // 아이템 장착
-            if (input <= Inventory.Count && Inventory[input-1].isEquip == false)
+            if (input <= Inventory.Count && Inventory[input - 1].isEquip == false)
             {
                 Inventory[input - 1].Use(this);
                 Inventory[input - 1].isEquip = true;
@@ -342,8 +351,186 @@ public class Warrior : ICharacter
             }
         }
     }
+    public void GoToDungeon() //4번 입력해서 던전으로 들어왔을 때
+    {
+        //    -각 던전별 기본 클리어 보상
+        //        -쉬운 던전 - 1000 G
+        //        - 일반 던전 - 1700 G
+        //        - 어려운 던전 - 2500 G
+        //    - 공격력  ~공격력 * 2 의 % 만큼 추가 보상 획득 가능
+        //        -ex) 공격력 10, 쉬움 던전
+        //        기본 보상 1000 G
+        //        공격력으로 인한 추가 보상 10 ~20 %
+        //        -ex) 공격력 15, 어려운 던전
+        //        기본 보상 2500 G
+        //        공격력으로 인한 추가 보상 15 ~30 %
 
-    public void Rest() // 4번 입력해서 여관으로 들어왔을 때
+        WriteManager WM = new WriteManager();
+
+        Console.Clear();
+
+        // 출력부
+        WM.ColoredLine("\n  던전", ConsoleColor.DarkRed);
+        Console.WriteLine("  경험치와 돈을 얻을 수 있는 던전입니다.");
+        WM.ColoredLine($"  현재 공격력 : {Attack}, 방어력 : {Defense}", ConsoleColor.DarkGray);
+
+        Console.SetCursorPosition(3, 5);
+        WM.ColoredLine("1. 쉬움 던전 (적정 방어력 5 이상)", ConsoleColor.DarkGreen);
+        Console.SetCursorPosition(3, 6);
+        WM.ColoredLine("2. 보통 던전 (적정 방어력 15 이상)", ConsoleColor.DarkYellow);
+        Console.SetCursorPosition(3, 7);
+        WM.ColoredLine("3. 쉬움 던전 (적정 방어력 25 이상)", ConsoleColor.DarkRed);
+
+        Console.SetCursorPosition(3, 9);
+        WM.ColoredLine("4. 내 스테이터스 확인", ConsoleColor.DarkGray);
+        Console.SetCursorPosition(3, 10);
+        WM.ColoredLine("0. 나가기", ConsoleColor.DarkGray);
+
+        // 선택 입력 받기
+        int input = int.Parse(Console.ReadLine());
+
+        // 나가기
+        if (input == 0)
+            return;
+
+        // 던전 입장
+        string difficulty = "";
+        Random rand = new Random(); // 성공 굴림
+
+        Console.Clear();
+
+        // 공통 출력부
+        switch (input)
+        {
+            case 1:
+                difficulty = "쉬움";
+                break;
+            case 2:
+                difficulty = "보통";
+                break;
+            case 3:
+                difficulty = "어려움";
+                break;
+        }
+        string difStr = difficulty + " 난이도로 던전에 입장합니다.";
+        Console.SetCursorPosition(3, 5);
+        Console.WriteLine(difStr);
+        Console.SetCursorPosition(3, 10);
+        Console.Write("□□□□□□□□□□□□□□□□□□□□");
+
+        // 게이지 연출
+        Console.SetCursorPosition(3, 10);
+        for (int i = 0; i < 10; i++)
+        {
+            Console.Write("■");
+            Thread.Sleep(80);
+        }
+
+        // 쉬움        
+        if (difficulty == "쉬움" && Defense < 5) // 적정 방어력 이하일 때, 40% 확률로 실패
+        {
+            if (100 > rand.Next(0, 41)) // 성공 굴림 (60%)
+                DungeonWin(5);
+            else
+                DungeonDefeat();
+        } else if (difficulty == "쉬움" && Defense >= 5) // 적정 방어력 이상일 때
+        {
+            DungeonWin(5);
+        }
+
+        // 보통  
+        if (difficulty == "보통" && Defense < 15) // 적정 방어력 이하일 때, 40% 확률로 실패
+        {
+            if (100 > rand.Next(0, 41)) // 성공 굴림 (60%)
+                DungeonWin(15);
+            else
+                DungeonDefeat();
+        }
+        else if (difficulty == "보통" && Defense >= 15) // 적정 방어력 이상일 때
+        {
+            DungeonWin(15);
+        }
+        // 어려움  
+        if (difficulty == "어려움" && Defense < 25) // 적정 방어력 이하일 때, 40% 확률로 실패
+        {
+            if (100 > rand.Next(0, 41)) // 성공 굴림 (60%)
+                DungeonWin(15);
+            else
+                DungeonDefeat();
+        }
+        else if (difficulty == "어려움" && Defense >= 25) // 적정 방어력 이상일 때
+        {
+            DungeonWin(25);
+        }
+        // 내 스테이터스 보기
+        else if (input == 4)
+        {
+            ShowInfo();
+        }
+    }
+
+    public void DungeonWin(int properDefense) // 던전 클리어시 출력, 골드 획득
+    {
+        WriteManager WM = new WriteManager();
+
+        Random bounsPer = new Random(); // 보너스
+        float bouns = bounsPer.Next(Attack, Attack * 2 + 1) / 100.0f;
+
+        int Damage = CalculateDamage(properDefense); // 요구 방어력에 따른 대미지 계산
+
+        Console.SetCursorPosition(23, 10);
+        for (int i = 0; i < 10; i++)
+        {
+            Console.Write("■");
+            Thread.Sleep(80);
+        }
+        Gold += 1000 + 1000 * bouns;
+
+        Console.SetCursorPosition(3, 12);
+        Console.WriteLine("던전 성공!");
+        WM.ColoredLine($"     1000G + {1000 * bouns}G를 획득하였습니다.", ConsoleColor.DarkYellow);
+        WM.ColoredLine($"     HP - {Damage}", ConsoleColor.DarkGray);
+
+        TakeDamage(Damage);
+
+        Console.WriteLine("\n\n아무키나 누르면 돌아갑니다.");
+        Console.ReadLine();
+
+    }
+    public int CalculateDamage(int properDefense) // 대미지 계산
+    {
+        Random rand = new Random();
+        int Damage = rand.Next(20, 36);
+
+        // 요구 방어력보다 방어력이 높을 때
+        if (Defense <= properDefense)
+        {
+            Damage -= Math.Abs(Defense - properDefense);
+            return Damage;
+        }
+        else
+        {
+            Damage += Math.Abs(Defense - properDefense);
+            return Damage;
+        }
+    }
+    public void DungeonDefeat() // 던전 실패시 출력, 체력 감소
+    {
+        WriteManager WM = new WriteManager();
+        int Damage = MaxHealth / 2;
+
+        Console.SetCursorPosition(3, 12);
+        Console.WriteLine("던전 실패...");
+        WM.ColoredLine($"체력 -50%({MaxHealth / 2}) 감소했습니다.)", ConsoleColor.DarkGray);
+
+        TakeDamage(MaxHealth / 2);
+
+        Console.WriteLine("아무키나 누르면 돌아갑니다.");
+        Console.ReadLine();
+        return;
+    }
+
+    public void Rest() // 5번 입력해서 여관으로 들어왔을 때
     {
         WriteManager WM = new WriteManager();
 
@@ -377,6 +564,7 @@ public class Warrior : ICharacter
         }
     }
 }
+
 
 class Monster : ICharacter
 {
@@ -420,6 +608,8 @@ internal class Program
 {
     static void Main(string[] args)
     {
+        WriteManager WM = new WriteManager();
+
         Console.WriteLine("텍스트 RPG 게임에 오신 것을 환영합니다.\n이름을 입력해주세요.\n\n");
 
         // 플레이어 정보
@@ -437,8 +627,12 @@ internal class Program
         while (true)
         {
             Console.Clear();
-            Console.WriteLine($"스파르타 던전에 오신 '{name}'님 환영합니다.\n이 곳에서 던전으로 들어가기 전 활동을 할 수 있습니다.\n");
-            Console.WriteLine("1. 상태 보기\n2. 인벤토리\n3. 상점\n4. 휴식 \n원하시는 행동을 입력해주세요. ");
+            WM.ColoredLine($"스파르타 던전에 오신 '{name}'님 환영합니다.\n이 곳에서 던전으로 들어가기 전 활동을 할 수 있습니다.\n", ConsoleColor.White);
+            WM.ColoredLine($"1. 상태 보기", ConsoleColor.DarkGreen);
+            WM.ColoredLine($"2. 인벤토리", ConsoleColor.DarkGreen);
+            WM.ColoredLine($"3. 상점", ConsoleColor.DarkGreen);
+            WM.ColoredLine($"4. 던전 입장", ConsoleColor.DarkRed);
+            WM.ColoredLine($"5. 휴식", ConsoleColor.DarkGreen);
 
 
             input = int.Parse(Console.ReadLine());
@@ -455,6 +649,9 @@ internal class Program
                     player.ShowShop(shopitems);
                     continue;
                 case 4:
+                    player.GoToDungeon();
+                    break;
+                case 5:
                     player.Rest();
                     continue;
                 default:
