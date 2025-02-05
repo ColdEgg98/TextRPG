@@ -2,6 +2,11 @@
 using System.Threading;
 using System.Xml.Linq;
 using System.ComponentModel;
+using System.IO;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+
+
 
 public class WriteManager
 {
@@ -22,6 +27,10 @@ public interface ICharacter
     void TakeDamage(int damage);
 }
 
+[JsonDerivedType(typeof(IronArmor), "IronArmor")]
+[JsonDerivedType(typeof(OldSword), "OldSword")]
+[JsonDerivedType(typeof(Spear), "Spear")]
+[JsonDerivedType(typeof(SunMoonSword), "SunMoonSword")]
 public abstract class Item
 {
     public string Name { get; set; }
@@ -136,6 +145,7 @@ public class Warrior : ICharacter
     public bool IsDead { get; set; }
     public string Class { get; set; }
     public float Gold { get; set; }
+    public List<Item> Inventory { get; set; }
 
 
     public void TakeDamage(int damage)
@@ -150,11 +160,10 @@ public class Warrior : ICharacter
             Thread.Sleep(1000);
         }
     }
-    public List<Item> Inventory { get; set; }
 
-    public Warrior(string name)
+    public Warrior()
     {
-        Name = name;
+        Name = "Name";
         level = 1;
         experience = 0;
         Attack = 20;
@@ -180,7 +189,7 @@ public class Warrior : ICharacter
 
             WM.ColoredLine("\n   레벨업!\n", ConsoleColor.DarkYellow);
         }
-    }
+    } // 경험치 획득
 
     public void ShowInfo() // 1번을 입력해서 상태 보기로 들어왔을 때
     {
@@ -214,7 +223,7 @@ public class Warrior : ICharacter
     public void AddItem(Item item)
     {
         Inventory.Add(item);
-    }
+    } // 인벤토리에 아이템 추가
 
     public void ShowInventory() // 2번을 입력해서 인벤토리로 들어왔을 때
     {
@@ -571,6 +580,44 @@ public class Warrior : ICharacter
             }
         }
     }
+
+    public void SaveProgress()
+    {
+        try
+        {
+            // JSON 직렬화 옵션 설정 (들여쓰기 등 가독성 향상)
+            var options = new JsonSerializerOptions { WriteIndented = true };
+            options.Converters.Add(new JsonStringEnumConverter());
+
+            // 객체를 JSON 문자열로 직렬화
+            string jsonString = JsonSerializer.Serialize(this, options);
+
+            // 파일에 JSON 문자열 저장
+            File.WriteAllText("progress.json", jsonString);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine($"저장 중 오류 발생 : {e.Message}");
+        }
+    }
+    public static Warrior LoadProgress()
+    {
+        if (File.Exists("progress.json"))
+        {
+            // 파일에서 JSON 문자열 읽기
+            string jsonString = File.ReadAllText("progress.json");
+
+            // JSON 문자열을 객체로 역직렬화
+            Warrior loadedWarrior = JsonSerializer.Deserialize<Warrior>(jsonString);
+
+            return loadedWarrior;
+        }
+        else
+        {
+            return null; // 저장된 진행 상황이 없으면 null 반환
+        }
+    }
+
 }
 
 
@@ -618,30 +665,49 @@ internal class Program
     {
         WriteManager WM = new WriteManager();
 
-        Console.WriteLine("텍스트 RPG 게임에 오신 것을 환영합니다.\n이름을 입력해주세요.\n\n");
+        Warrior player = new Warrior();
+        Warrior loadedPlayer = Warrior.LoadProgress();
 
-        // 플레이어 정보
-        string name = Console.ReadLine();
-        Warrior player = new Warrior(name);
+        int input;
 
+        if (loadedPlayer != null)
+        {
+            player = loadedPlayer;
+            WM.ColoredLine("이전에 저장한 진행 상황을 불러왔습니다.", ConsoleColor.DarkYellow);
+            Thread.Sleep(1000);
+        } else
+        {
+            Console.WriteLine("텍스트 RPG 게임에 오신 것을 환영합니다.\n이름을 입력해주세요.\n\n");
+            string name = null;
+            while (string.IsNullOrEmpty(name))
+            {
+                Console.Clear();
+                Console.WriteLine("텍스트 RPG 게임에 오신 것을 환영합니다.\n이름을 입력해주세요.\n\n");
+                name = Console.ReadLine();
+                player = new Warrior();
+                player.Name = name;
+            }
+        }
+
+        // 상점 아이템 목록
         List<Item> shopitems = new List<Item>();
         shopitems.Add(new IronArmor());
         shopitems.Add(new OldSword());
         shopitems.Add(new Spear());
         shopitems.Add(new SunMoonSword());
 
-        int input;
 
         while (true)
         {
             Console.Clear();
-            WM.ColoredLine($"스파르타 던전에 오신 '{name}'님 환영합니다.\n이 곳에서 던전으로 들어가기 전 활동을 할 수 있습니다.\n", ConsoleColor.White);
+            WM.ColoredLine($"스파르타 던전에 오신 '{player.Name}'님 환영합니다.\n이 곳에서 던전으로 들어가기 전 활동을 할 수 있습니다.\n", ConsoleColor.White);
             WM.ColoredLine($"1. 상태 보기", ConsoleColor.DarkGreen);
             WM.ColoredLine($"2. 인벤토리", ConsoleColor.DarkGreen);
             WM.ColoredLine($"3. 상점", ConsoleColor.DarkGreen);
             WM.ColoredLine($"4. 던전 입장", ConsoleColor.DarkRed);
             WM.ColoredLine($"5. 휴식", ConsoleColor.DarkGreen);
 
+            player.SaveProgress();
 
             input = int.Parse(Console.ReadLine());
 
