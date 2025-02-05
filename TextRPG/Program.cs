@@ -17,7 +17,7 @@ public interface ICharacter
 {
     string Name { get; set; }
     int CurrentHealth { get; set; }
-    int Attack { get; set; }
+    float Attack { get; set; }
     bool IsDead { get; set; }
     void TakeDamage(int damage);
 }
@@ -127,9 +127,10 @@ public class SunMoonSword : Item
 public class Warrior : ICharacter
 {
     public int level { get; set; }
+    public int experience { get; set; }
     public string Name { get; set; }
-    public int Attack { get; set; }
-    public int Defense { get; set; }
+    public float Attack { get; set; }
+    public float Defense { get; set; }
     public int MaxHealth { get; set; }
     public int CurrentHealth { get; set; }
     public bool IsDead { get; set; }
@@ -144,18 +145,18 @@ public class Warrior : ICharacter
         CurrentHealth -= damage;
         if (CurrentHealth <= 0)
         {
-            WM.ColoredLine("체력이 0이 되어 사망하였습니다...", ConsoleColor.DarkGray);
+            WM.ColoredLine("\n체력이 0이 되어 사망하였습니다...\n", ConsoleColor.DarkGray);
             IsDead = true;
             Thread.Sleep(1000);
         }
     }
-
     public List<Item> Inventory { get; set; }
 
     public Warrior(string name)
     {
         Name = name;
         level = 1;
+        experience = 0;
         Attack = 20;
         Defense = 10;
         MaxHealth = 100;
@@ -163,6 +164,22 @@ public class Warrior : ICharacter
         Class = "전사";
         Gold = 1000000;
         Inventory = new List<Item>();
+    }
+    public void expUP()
+    {
+        WriteManager WM = new WriteManager();
+
+        experience++;
+        int levelGap = level - experience;
+        if (levelGap == 0)
+        {
+            level++;
+            Attack += 0.5f;
+            Defense += 1;
+            experience = 0;
+
+            WM.ColoredLine("\n   레벨업!\n", ConsoleColor.DarkYellow);
+        }
     }
 
     public void ShowInfo() // 1번을 입력해서 상태 보기로 들어왔을 때
@@ -353,18 +370,6 @@ public class Warrior : ICharacter
     }
     public void GoToDungeon() //4번 입력해서 던전으로 들어왔을 때
     {
-        //    -각 던전별 기본 클리어 보상
-        //        -쉬운 던전 - 1000 G
-        //        - 일반 던전 - 1700 G
-        //        - 어려운 던전 - 2500 G
-        //    - 공격력  ~공격력 * 2 의 % 만큼 추가 보상 획득 가능
-        //        -ex) 공격력 10, 쉬움 던전
-        //        기본 보상 1000 G
-        //        공격력으로 인한 추가 보상 10 ~20 %
-        //        -ex) 공격력 15, 어려운 던전
-        //        기본 보상 2500 G
-        //        공격력으로 인한 추가 보상 15 ~30 %
-
         WriteManager WM = new WriteManager();
 
         Console.Clear();
@@ -469,12 +474,12 @@ public class Warrior : ICharacter
         }
     }
 
-    public void DungeonWin(int properDefense) // 던전 클리어시 출력, 골드 획득
+    public void DungeonWin(int properDefense) // 던전 클리어시 출력, 골드&경험치 획득
     {
         WriteManager WM = new WriteManager();
 
         Random bounsPer = new Random(); // 보너스
-        float bouns = bounsPer.Next(Attack, Attack * 2 + 1) / 100.0f;
+        float bouns = bounsPer.Next((int)Attack, (int)Attack * 2 + 1) / 100.0f;
 
         int Damage = CalculateDamage(properDefense); // 요구 방어력에 따른 대미지 계산
 
@@ -489,11 +494,14 @@ public class Warrior : ICharacter
         Console.SetCursorPosition(3, 12);
         Console.WriteLine("던전 성공!");
         WM.ColoredLine($"     1000G + {1000 * bouns}G를 획득하였습니다.", ConsoleColor.DarkYellow);
+        WM.ColoredLine($"     경험치를 획득했습니다!", ConsoleColor.DarkYellow);
         WM.ColoredLine($"     HP - {Damage}", ConsoleColor.DarkGray);
 
-        TakeDamage(Damage);
+        expUP(); // 경험치 획득
 
-        Console.WriteLine("\n\n아무키나 누르면 돌아갑니다.");
+        TakeDamage(Damage); // 체력 감소
+
+        Console.WriteLine("\n\n아무키나 입력하면 돌아갑니다.");
         Console.ReadLine();
 
     }
@@ -503,14 +511,14 @@ public class Warrior : ICharacter
         int Damage = rand.Next(20, 36);
 
         // 요구 방어력보다 방어력이 높을 때
-        if (Defense <= properDefense)
+        if (Defense >= properDefense)
         {
-            Damage -= Math.Abs(Defense - properDefense);
+            Damage -= (int)Defense - properDefense;
             return Damage;
         }
-        else
+        else // 방어력이 낮을 때
         {
-            Damage += Math.Abs(Defense - properDefense);
+            Damage += properDefense - (int)Defense;
             return Damage;
         }
     }
@@ -570,7 +578,7 @@ class Monster : ICharacter
 {
     public string Name { get; set; }
     public int CurrentHealth { get; set; }
-    public int Attack { get; set; }
+    public float Attack { get; set; }
     public bool IsDead { get; set; }
     public void TakeDamage(int damage)
     {
