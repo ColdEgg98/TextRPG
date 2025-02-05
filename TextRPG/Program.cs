@@ -31,6 +31,7 @@ public interface ICharacter
 [JsonDerivedType(typeof(OldSword), "OldSword")]
 [JsonDerivedType(typeof(Spear), "Spear")]
 [JsonDerivedType(typeof(SunMoonSword), "SunMoonSword")]
+[JsonDerivedType(typeof(Healingpotion), "Healingpotion")]
 public abstract class Item
 {
     public string Name { get; set; }
@@ -132,7 +133,25 @@ public class SunMoonSword : Item
         warrior.Attack -= Value;
     }
 }
-
+public class Healingpotion: Item
+{
+    public Healingpotion()
+    {
+        Name = "힐링 포션";
+        Type = "체력 회복";
+        Description = "사용하면 체력 30을 회복합니다.";
+        Value = 30;
+        Price = 400;
+    }
+    public override void Use(Warrior warrior)
+    {
+        if (warrior.CurrentHealth + Value > warrior.MaxHealth)
+            warrior.CurrentHealth = warrior.MaxHealth;
+        else
+            warrior.CurrentHealth += Value;
+    }
+    public override void UnUse(Warrior warrior) { }
+}
 public class Warrior : ICharacter
 {
     public int level { get; set; }
@@ -185,6 +204,9 @@ public class Warrior : ICharacter
             level++;
             Attack += 0.5f;
             Defense += 1;
+            MaxHealth += 10;
+            CurrentHealth += 10;
+
             experience = 0;
 
             WM.ColoredLine("\n   레벨업!\n", ConsoleColor.DarkYellow);
@@ -224,6 +246,13 @@ public class Warrior : ICharacter
     {
         Inventory.Add(item);
     } // 인벤토리에 아이템 추가
+
+    public void UseItem(Item item)
+    {
+        item.Use(this);
+        item.isEquip = false;
+        Inventory.Remove(item);
+    }
 
     public void ShowInventory() // 2번을 입력해서 인벤토리로 들어왔을 때
     {
@@ -273,6 +302,11 @@ public class Warrior : ICharacter
                     }
                 }
                 Inventory[input - 1].isEquip = true;
+
+                if (itemType == "체력 회복")
+                {
+                    UseItem(Inventory[input - 1]);
+                }
             }
             // 아이템 해제
             else if (input <= Inventory.Count && Inventory[input - 1].isEquip == true)
@@ -387,6 +421,7 @@ public class Warrior : ICharacter
             }
         }
     }
+
     public void GoToDungeon() //4번 입력해서 던전으로 들어왔을 때
     {
         WriteManager WM = new WriteManager();
@@ -524,6 +559,7 @@ public class Warrior : ICharacter
         Console.ReadLine();
 
     }
+
     public int CalculateDamage(int properDefense) // 대미지 계산
     {
         Random rand = new Random();
@@ -541,6 +577,7 @@ public class Warrior : ICharacter
             return Damage;
         }
     }
+
     public void DungeonDefeat() // 던전 실패시 출력, 체력 감소
     {
         WriteManager WM = new WriteManager();
@@ -610,6 +647,7 @@ public class Warrior : ICharacter
             Console.WriteLine($"저장 중 오류 발생 : {e.Message}");
         }
     }
+
     public static Warrior LoadProgress()
     {
         if (File.Exists("progress.json"))
@@ -627,9 +665,7 @@ public class Warrior : ICharacter
             return null; // 저장된 진행 상황이 없으면 null 반환
         }
     }
-
 }
-
 
 class Monster : ICharacter
 {
@@ -705,6 +741,7 @@ internal class Program
         shopitems.Add(new OldSword());
         shopitems.Add(new Spear());
         shopitems.Add(new SunMoonSword());
+        shopitems.Add(new Healingpotion());
 
         while (true)
         {
