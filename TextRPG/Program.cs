@@ -262,6 +262,16 @@ public class Warrior : ICharacter
             if (input <= Inventory.Count && Inventory[input - 1].isEquip == false)
             {
                 Inventory[input - 1].Use(this);
+                string itemType = Inventory[input - 1].Type;
+
+                for (int i = 0; i < Inventory.Count; i++) // 겹치는 타입의 아이템 해제
+                {
+                    if (Inventory[i].isEquip == true && itemType == Inventory[i].Type)
+                    {
+                        Inventory[i].isEquip = false;
+                        Inventory[i].UnUse(this);
+                    }
+                }
                 Inventory[input - 1].isEquip = true;
             }
             // 아이템 해제
@@ -695,7 +705,6 @@ internal class Program
         shopitems.Add(new OldSword());
         shopitems.Add(new Spear());
         shopitems.Add(new SunMoonSword());
-
 
         while (true)
         {
