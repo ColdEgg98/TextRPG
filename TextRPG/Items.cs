@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.Json.Serialization;
-using System.Threading.Tasks;
+﻿using System.Text.Json.Serialization;
 
 [JsonDerivedType(typeof(IronArmor), "IronArmor")]
 [JsonDerivedType(typeof(OldSword), "OldSword")]
@@ -20,8 +15,8 @@ public abstract class Item
     public bool isEquip { get; set; }
     public bool isOwned { get; set; }
 
-    public abstract void Use(Warrior warrior);
-    public abstract void UnUse(Warrior warrior);
+    public abstract void Use(Player warrior);
+    public abstract void UnUse(Player warrior);
 }
 
 public class IronArmor : Item
@@ -36,11 +31,11 @@ public class IronArmor : Item
         Price = 800;
         Value = 5;
     }
-    public override void Use(Warrior warrior)
+    public override void Use(Player warrior)
     {
         warrior.Defense += Value;
     }
-    public override void UnUse(Warrior warrior)
+    public override void UnUse(Player warrior)
     {
         warrior.Defense -= Value;
     }
@@ -58,11 +53,11 @@ public class OldSword : Item
         Value = 2;
         Price = 500;
     }
-    public override void Use(Warrior warrior)
+    public override void Use(Player warrior)
     {
         warrior.Attack += Value;
     }
-    public override void UnUse(Warrior warrior)
+    public override void UnUse(Player warrior)
     {
         warrior.Attack -= Value;
     }
@@ -80,11 +75,11 @@ public class Spear : Item
         Value = 7;
         Price = 3000;
     }
-    public override void Use(Warrior warrior)
+    public override void Use(Player warrior)
     {
         warrior.Attack += Value;
     }
-    public override void UnUse(Warrior warrior)
+    public override void UnUse(Player warrior)
     {
         warrior.Attack -= Value;
     }
@@ -102,11 +97,11 @@ public class SunMoonSword : Item
         Value = 30;
         Price = 900000;
     }
-    public override void Use(Warrior warrior)
+    public override void Use(Player warrior)
     {
         warrior.Attack += Value;
     }
-    public override void UnUse(Warrior warrior)
+    public override void UnUse(Player warrior)
     {
         warrior.Attack -= Value;
     }
@@ -121,12 +116,12 @@ public class Healingpotion : Item
         Value = 30;
         Price = 400;
     }
-    public override void Use(Warrior warrior)
+    public override void Use(Player warrior)
     {
         if (warrior.CurrentHealth + Value > warrior.MaxHealth)
             warrior.CurrentHealth = warrior.MaxHealth;
         else
             warrior.CurrentHealth += Value;
     }
-    public override void UnUse(Warrior warrior) { }
+    public override void UnUse(Player warrior) { }
 }
